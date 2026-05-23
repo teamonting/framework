@@ -1,0 +1,21 @@
+{
+  "name": "@onting/framework-root",
+  "version": "0.0.0-0",
+  "description": "",
+  "private": true,
+  "homepage": "https://github.com/teamonting/framework#readme",
+  "bugs": {
+    "url": "https://github.com/teamonting/framework/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teamonting/framework.git"
+  },
+  "license": "MIT",
+  "author": "William Wong",
+  "type": "module",
+  "workspaces": [
+    "packages/rpc",
+    "packages/tester"
+  ]
+}

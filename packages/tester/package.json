@@ -1,0 +1,24 @@
+{
+  "name": "@onting/tester",
+  "version": "0.0.0-0",
+  "description": "",
+  "bin": {
+    "chrome": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=24.12.0"
+  },
+  "license": "MIT",
+  "author": "William Wong",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@onting/rpc": "^0.0.0-0",
+    "message-port-rpc": "^2.0.0",
+    "selenium-webdriver": "^4.44.0"
+  },
+  "devDependencies": {
+    "@types/selenium-webdriver": "^4.35.5"
+  }
+}
