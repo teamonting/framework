@@ -12,9 +12,12 @@
   "author": "William Wong",
   "type": "module",
   "main": "./src/index.ts",
-  "scripts": {},
+  "scripts": {
+    "start": "node --experimental-strip-types ."
+  },
   "dependencies": {
     "@onting/rpc": "^0.0.0-0",
+    "@onting/selenium-webdriver-message-port": "^0.0.0-0",
     "message-port-rpc": "^2.0.0",
     "selenium-webdriver": "^4.44.0"
   },

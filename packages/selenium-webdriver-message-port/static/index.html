@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script type="importmap">
+      {
+        "imports": {
+          "message-port-rpc": "https://esm.sh/message-port-rpc"
+        }
+      }
+    </script>
+  </head>
+  <script type="module">
+    import { messagePortRPC } from 'message-port-rpc';
+    import { createMessagePort } from './browser.js';
+
+    const { messagePort } = createMessagePort('one');
+
+    messagePort.addEventListener('message', ({ data }) => console.log(`BROWSER RECEIVE: ${data}`));
+    messagePort.start();
+
+    messagePort.postMessage('Aloha!');
+  </script>
+</html>

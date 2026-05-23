@@ -1,0 +1,30 @@
+{
+  "name": "@onting/selenium-webdriver-message-port",
+  "version": "0.0.0-0",
+  "description": "",
+  "license": "MIT",
+  "author": "William Wong",
+  "type": "module",
+  "exports": {
+    "./browser.js": {
+      "import": "./dist/browser.js"
+    },
+    "./host.js": {
+      "import": "./src/host/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "npm run build:cp && npm run build:tsup",
+    "build:cp": "copy .\\static\\** .\\dist\\",
+    "build:tsup": "tsup --config tsup.config.ts",
+    "start": "npx --offline serve dist"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.44.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.6",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

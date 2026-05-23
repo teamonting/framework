@@ -16,6 +16,7 @@
   "type": "module",
   "workspaces": [
     "packages/rpc",
+    "packages/selenium-webdriver-message-port",
     "packages/tester"
   ]
 }
