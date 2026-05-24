@@ -1,3 +1,5 @@
+/// <reference types="../env.d.ts" />
+
 import type { MessagePortFacility, SerializedMessage } from '../types.js';
 
 const channelMap = new Map<string, MessageChannel>();
