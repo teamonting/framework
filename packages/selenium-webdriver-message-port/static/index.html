@@ -11,17 +11,17 @@
   </head>
   <script type="module">
     import { messagePortRPC } from 'message-port-rpc';
-    import { getMessagePort } from './browser.js';
+    import './browser.js';
 
-    const messagePort = getMessagePort();
+    const { webdriverMessagePort } = navigator;
 
-    messagePort.addEventListener('message', ({ data, ports }) => {
+    webdriverMessagePort.addEventListener('message', ({ data, ports }) => {
       console.log(`BROWSER RECEIVE (numPort=${ports.length}): ${data}`);
 
       ports[0]?.postMessage('Good morning!');
     });
 
-    messagePort.start();
+    webdriverMessagePort.start();
 
     const { port1, port2 } = new MessageChannel();
 
@@ -31,6 +31,6 @@
 
     port1.start();
 
-    messagePort.postMessage('Aloha!', [port2]);
+    webdriverMessagePort.postMessage('Aloha!', [port2]);
   </script>
 </html>

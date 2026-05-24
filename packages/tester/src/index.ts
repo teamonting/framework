@@ -1,7 +1,7 @@
+import { setup } from '@onting/selenium-webdriver-message-port/host.js';
 import path from 'node:path';
 import { Browser, Builder } from 'selenium-webdriver';
 import { ServiceBuilder } from 'selenium-webdriver/chrome.js';
-import { createBridge } from '@onting/selenium-webdriver-message-port/host.js';
 
 const builder = new Builder();
 
@@ -12,8 +12,8 @@ const webDriver = await builder
 
 await webDriver.navigate().to('http://localhost:3000');
 
-const bridge = createBridge(webDriver);
-const messagePort = bridge.getMessagePort();
+const { getMessagePort, poll } = setup(webDriver);
+const messagePort = getMessagePort();
 
 messagePort.addEventListener('message', ({ data, ports }: MessageEvent) => {
   console.log(`HOST RECEIVE (numPort=${ports.length}): ${data}`);
@@ -32,7 +32,7 @@ port1.start();
 messagePort.postMessage('Hello, World!', [port2]);
 
 for (let index = 0; index < 60; index++) {
-  bridge.poll();
+  poll();
 
   await new Promise(resolve => setTimeout(resolve, 1_000));
 }

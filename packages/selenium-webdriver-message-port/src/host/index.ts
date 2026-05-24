@@ -1,1 +1,1 @@
-export { default as createBridge } from './createBridge.ts';
+export { default as setup } from './setup.ts';

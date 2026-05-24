@@ -74,10 +74,10 @@ function createBridge(webDriver: WebDriver): {
     }
   };
 
-  return {
+  return Object.freeze({
     getMessagePort: () => getMessagePort(ROOT_MESSAGE_PORT),
     poll
-  };
+  });
 }
 
 export default createBridge;

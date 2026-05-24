@@ -23,6 +23,7 @@
     "selenium-webdriver": "^4.44.0"
   },
   "devDependencies": {
+    "@types/node": "^25.9.1",
     "serve": "^14.2.6",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
