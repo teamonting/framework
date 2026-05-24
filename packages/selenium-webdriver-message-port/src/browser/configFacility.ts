@@ -1,46 +1,64 @@
-import type { MessagePortFacility, MessagePortFacilitySlice } from '../types.js';
+import type { MessagePortFacility, SerializedMessage } from '../types.js';
 
 class BrowserMessagePortFacility implements MessagePortFacility {
-  #slices = new Map<string, MessagePortFacilitySlice>();
+  #channelMap = new Map<string, MessageChannel>();
+  #port2ToIdMap = new Map<MessagePort, string>();
+  #queue: SerializedMessage[] = [];
 
-  get<T = any>(key: string): MessagePortFacilitySlice {
-    let slice = this.#slices.get(key);
+  getMessagePort(id: string): MessagePort {
+    const existingPort = this.#channelMap.get(id)?.port2;
 
-    if (!slice) {
-      slice = new BrowserMessagePortFacilitySlice<T>();
-
-      this.#slices.set(key, slice);
+    if (existingPort) {
+      return existingPort;
     }
 
-    return slice;
+    const channel = new MessageChannel();
+
+    this.#channelMap.set(id, channel);
+    this.#port2ToIdMap.set(channel.port2, id);
+
+    channel.port1.addEventListener('message', ({ data, ports }) => {
+      const portIds = ports.map(port => {
+        const id = this.#port2ToIdMap.get(port);
+
+        if (typeof id === 'undefined') {
+          const id = crypto.randomUUID();
+
+          const bridgingPort = this.getMessagePort(id);
+
+          port.addEventListener('message', ({ data, ports }) => bridgingPort.postMessage(data, [...ports]));
+          bridgingPort.addEventListener('message', ({ data, ports }) => port.postMessage(data, [...ports]));
+
+          bridgingPort.start();
+
+          return id;
+        }
+
+        return id;
+      });
+
+      this.#queue.push(Object.freeze({ id, data, portIds }));
+    });
+
+    channel.port1.start();
+
+    return channel.port2;
   }
-}
 
-class BrowserMessagePortFacilitySlice<T = any> implements MessagePortFacilitySlice<T> {
-  #browserPort1: MessagePort;
-  #browserPort2: MessagePort;
-  #queue: T[] = [];
+  sendToBrowser(id: string, data: any, portIds: readonly string[]): void {
+    const channel = this.#channelMap.get(id);
 
-  constructor() {
-    const { port1, port2 } = new MessageChannel();
+    if (!channel) {
+      return console.warn(`Host should not send to unbound port ${id}`);
+    }
 
-    this.#browserPort1 = port1;
-    this.#browserPort2 = port2;
+    const ports = portIds.map(portId => this.getMessagePort(portId));
 
-    port1.addEventListener('message', ({ data }) => this.#queue.push(data));
-    port1.start();
+    channel.port1.postMessage(data, ports);
   }
 
-  flushHostMessages(): readonly T[] {
-    return this.#queue.splice(0);
-  }
-
-  getBrowserPort(): MessagePort {
-    return this.#browserPort2;
-  }
-
-  sendToBrowser(message: T): void {
-    this.#browserPort1.postMessage(message);
+  flushAll(): readonly SerializedMessage[] {
+    return Object.freeze(this.#queue.splice(0));
   }
 }
 

@@ -1,3 +1,3 @@
 import './configFacility.ts';
 
-export { default as createMessagePort } from './createMessagePort.ts';
+export { default as getMessagePort } from './getMessagePort.ts';

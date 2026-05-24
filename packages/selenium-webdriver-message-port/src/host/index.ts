@@ -1,1 +1,1 @@
-export { default as createMessagePort } from './createMessagePort.ts';
+export { default as createBridge } from './createBridge.ts';

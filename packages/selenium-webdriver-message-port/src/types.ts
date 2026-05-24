@@ -1,11 +1,13 @@
-interface MessagePortFacilitySlice<T = any> {
-  flushHostMessages(): readonly T[];
-  getBrowserPort(): MessagePort;
-  sendToBrowser(message: T): void;
-}
+type SerializedMessage = {
+  id: string;
+  data: any;
+  portIds: readonly string[];
+};
 
 interface MessagePortFacility {
-  get<T>(key: string): MessagePortFacilitySlice<T>;
+  flushAll(): readonly SerializedMessage[];
+  getMessagePort(id: string): MessagePort;
+  sendToBrowser(id: string, data: any, portIds: readonly string[]): void;
 }
 
-export type { MessagePortFacility, MessagePortFacilitySlice };
+export type { MessagePortFacility, SerializedMessage };
