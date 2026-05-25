@@ -1,35 +1,61 @@
 import { scenario } from '@testduet/given-when-then';
-import * as TestFacility from 'node:test';
-import { Browser, Builder } from 'selenium-webdriver';
+import { waitFor } from '@testduet/wait-for';
+import { expect } from 'expect';
+import * as NodeTest from 'node:test';
+import { Browser, Builder, logging } from 'selenium-webdriver';
+import { Options } from 'selenium-webdriver/chrome.js';
 import setup from '../src/host/setup.ts';
 
 scenario(
   'simple',
   bdd => {
     bdd
-      .given('browser loading simple.html', async () => {
-        const builder = new Builder();
+      .given(
+        'browser loading simple.html',
+        async () => {
+          const loggingPrefs = new logging.Preferences();
 
-        const webDriver = await builder
-          .forBrowser(Browser.CHROME)
-          .usingServer('http://localhost:4444/wd/hub')
-          // .setChromeService(new ServiceBuilder(path.join(process.cwd(), 'chromedriver.exe')))
-          .build();
+          loggingPrefs.setLevel(logging.Type.BROWSER, logging.Level.ALL);
 
-        await webDriver.navigate().to('http://web:8080/public/simple.html');
+          const options = new Options();
 
-        return webDriver;
-      })
-      .when('a message is sent', async driver => {
-        const { messagePort, poll } = setup(driver);
+          options.setLoggingPrefs(loggingPrefs);
 
-        messagePort.postMessage('Hello, World!');
-      })
-      .then('should log the message', async driver => {
-        const logs = driver.manage().logs();
+          const webDriver = await new Builder()
+            .forBrowser(Browser.CHROME)
+            .setChromeOptions(options)
+            .usingServer('http://localhost:4444/wd/hub/')
+            .build();
 
-        console.log(logs.getAvailableLogTypes());
+          await webDriver.navigate().to('http://web:3000/public/simple.html');
+
+          return webDriver;
+        },
+        webDriver => webDriver.quit()
+      )
+      .when(
+        'a message is sent',
+        async webDriver => {
+          const { messagePort } = setup(webDriver);
+
+          messagePort.postMessage('Hello, World!');
+
+          return messagePort;
+        },
+        (_, messagePort) => messagePort.close()
+      )
+      .then('should log the message', async webDriver => {
+        await waitFor(async () => {
+          const logs = await webDriver.manage().logs().get(logging.Type.BROWSER);
+
+          expect(logs).toContainEqual(
+            expect.objectContaining({
+              level: logging.Level.INFO,
+              message: expect.stringContaining(JSON.stringify('Hello, World!'))
+            })
+          );
+        });
       });
   },
-  TestFacility
+  NodeTest
 );

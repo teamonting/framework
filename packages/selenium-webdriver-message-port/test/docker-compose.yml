@@ -13,11 +13,11 @@ services:
     entrypoint:
       - npx
       - serve@14.2.6
-      - /var/web/public/
+      - /var/web/
       - --cors
     ports:
-      - 8080:3000
+      - 3000:3000
     stop_grace_period: 1s
     volumes:
       - ../dist/:/var/web/dist/
-      - ./static/public/:/var/web/public/
+      - ./public/:/var/web/public/

@@ -17,12 +17,15 @@
     "build": "npm run build:cp && npm run build:tsup",
     "build:cp": "mkdir -p ./dist/ && cp ./static/** ./dist/",
     "build:tsup": "tsup --config tsup.config.ts",
-    "start": "npx --offline serve dist"
+    "start": "npx --offline serve dist",
+    "test": "node --test ./test/*.ts"
   },
   "devDependencies": {
     "@testduet/given-when-then": "^0.1.0",
+    "@testduet/wait-for": "^0.1.1",
     "@types/node": "^25.9.1",
     "@types/selenium-webdriver": "^4.35.5",
+    "expect": "^30.4.1",
     "selenium-webdriver": "^4.44.0",
     "serve": "^14.2.6",
     "tsup": "^8.5.1",
