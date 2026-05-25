@@ -2,15 +2,10 @@
 <html lang="en">
   <head></head>
   <body>
-    <script type="module">
-      console.log('INIT');
-    </script>
     <script src="/dist/browser.js" type="module"></script>
     <script type="module">
       navigator.webdriverMessagePort.addEventListener('message', ({ data }) => console.log(data));
       navigator.webdriverMessagePort.start();
-
-      console.log('LOADED');
     </script>
   </body>
 </html>

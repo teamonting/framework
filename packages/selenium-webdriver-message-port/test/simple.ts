@@ -46,9 +46,7 @@ scenario(
       )
       .then('should log the message', async webDriver => {
         await waitFor(async () => {
-          const logs = await webDriver.manage().logs().get(logging.Type.BROWSER);
-
-          expect(logs).toContainEqual(
+          expect(await webDriver.manage().logs().get(logging.Type.BROWSER)).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Hello, World!'))
