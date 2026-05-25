@@ -17,8 +17,9 @@
     "build": "npm run build:cp && npm run build:tsup",
     "build:cp": "mkdir -p ./dist/ && cp ./static/** ./dist/",
     "build:tsup": "tsup --config tsup.config.ts",
+    "docker": "cd ./test/ && docker compose up",
     "start": "npx --offline serve dist",
-    "test": "node --test ./test/*.ts"
+    "test": "node --test ./test/scenario/**/*.ts"
   },
   "devDependencies": {
     "@testduet/given-when-then": "^0.1.0",

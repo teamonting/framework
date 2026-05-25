@@ -20,4 +20,4 @@ services:
     stop_grace_period: 1s
     volumes:
       - ../dist/:/var/web/dist/
-      - ./public/:/var/web/public/
+      - ./scenario/:/var/web/scenario/
