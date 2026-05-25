@@ -3,8 +3,8 @@
 import type { WebDriver } from 'selenium-webdriver';
 import { ROOT_MESSAGE_PORT } from '../constant.ts';
 
-function createBridge(webDriver: WebDriver): {
-  getMessagePort(): MessagePort;
+function setup(webDriver: WebDriver): {
+  messagePort: MessagePort;
   poll(): void;
 } {
   const portMap = new Map<string, MessageChannel>();
@@ -75,9 +75,9 @@ function createBridge(webDriver: WebDriver): {
   };
 
   return Object.freeze({
-    getMessagePort: () => getMessagePort(ROOT_MESSAGE_PORT),
+    messagePort: getMessagePort(ROOT_MESSAGE_PORT),
     poll
   });
 }
 
-export default createBridge;
+export default setup;

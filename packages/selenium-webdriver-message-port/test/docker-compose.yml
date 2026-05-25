@@ -1,0 +1,23 @@
+services:
+  chrome:
+    image: selenium/standalone-chrome:latest
+
+    ports:
+      - 4444:4444
+      - 7900:7900
+    shm_size: '2.5gb'
+
+  web:
+    image: node:24-alpine
+
+    entrypoint:
+      - npx
+      - serve@14.2.6
+      - /var/web/public/
+      - --cors
+    ports:
+      - 8080:3000
+    stop_grace_period: 1s
+    volumes:
+      - ../dist/:/var/web/dist/
+      - ./static/public/:/var/web/public/

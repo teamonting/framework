@@ -15,15 +15,15 @@
   },
   "scripts": {
     "build": "npm run build:cp && npm run build:tsup",
-    "build:cp": "copy .\\static\\** .\\dist\\",
+    "build:cp": "mkdir -p ./dist/ && cp ./static/** ./dist/",
     "build:tsup": "tsup --config tsup.config.ts",
     "start": "npx --offline serve dist"
   },
-  "dependencies": {
-    "selenium-webdriver": "^4.44.0"
-  },
   "devDependencies": {
+    "@testduet/given-when-then": "^0.1.0",
     "@types/node": "^25.9.1",
+    "@types/selenium-webdriver": "^4.35.5",
+    "selenium-webdriver": "^4.44.0",
     "serve": "^14.2.6",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
