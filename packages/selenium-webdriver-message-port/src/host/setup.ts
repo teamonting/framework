@@ -31,7 +31,7 @@ function setup(webDriver: WebDriver): {
     portMap.set(portId, port);
 
     port.addEventListener('message', ({ data, ports }) => {
-      webDriver.executeScript(
+      webDriver.executeScript<void>(
         (message: SerializedMessage) => {
           if (!globalThis.__messagePortFacility) {
             throw new Error('The page does not have harness installed, cannot send message');
@@ -43,6 +43,11 @@ function setup(webDriver: WebDriver): {
           data,
           portId,
           transferPortIds: ports.map(port => {
+            // Because MessagePort will detach on send, thus, postMessage() cannot transfer the same MessagePort twice.
+            // We don't need to check if the port already have an ID or not.
+            // MessagePort cannot be sent twice, thus it must be new.
+            // Otherwise postMessage() would have already fail and should never reach this code block.
+
             const id = v7();
 
             registerMessagePort(port, id);
@@ -76,7 +81,8 @@ function setup(webDriver: WebDriver): {
 
       port.postMessage(
         data,
-        transferPortIds.map(transferPortId => portMap.get(transferPortId) ?? createMessagePort(transferPortId))
+        // postMessage() cannot send MessagePort twice, thus, every port received must be new.
+        transferPortIds.map(transferPortId => createMessagePort(transferPortId))
       );
     }
   };

@@ -5,7 +5,6 @@ import { ROOT_MESSAGE_PORT } from '../constant.ts';
 import type { MessagePortFacility, SerializedMessage } from '../types.js';
 
 const portMap = new Map<string, MessagePort>();
-const portIdMap = new Map<MessagePort, string>();
 const queue: SerializedMessage[] = [];
 
 function flushAll(): readonly SerializedMessage[] {
@@ -30,19 +29,17 @@ function registerMessagePort(port: MessagePort, portId: string): void {
   }
 
   portMap.set(portId, port);
-  portIdMap.set(port, portId);
 
   port.addEventListener('message', ({ data, ports }) => {
+    // Because MessagePort will detach on send, thus, postMessage() cannot transfer the same MessagePort twice.
+    // We don't need to check if the port already have an ID or not.
+    // MessagePort cannot be sent twice, thus it must be new.
+    // Otherwise postMessage() would have already fail and should never reach this code block.
+
     const transferPortIds = ports.map(port => {
-      const id = portIdMap.get(port);
+      const id = v7();
 
-      if (typeof id === 'undefined') {
-        const id = v7();
-
-        registerMessagePort(port, id);
-
-        return id;
-      }
+      registerMessagePort(port, id);
 
       return id;
     });
@@ -59,12 +56,15 @@ function sendToBrowser(message: SerializedMessage): void {
   const port = portMap.get(portId);
 
   if (!port) {
-    return console.warn(`Host should not send to unbound port ${portId}`);
+    console.warn(`Host should not send to unbound port "${portId}"`);
+
+    return;
   }
 
   port.postMessage(
     data,
-    transferPortIds.map(transferPortId => portMap.get(transferPortId) ?? createMessagePort(transferPortId))
+    // postMessage() cannot send MessagePort twice, thus, every port received must be new.
+    transferPortIds.map(transferPortId => createMessagePort(transferPortId))
   );
 }
 
