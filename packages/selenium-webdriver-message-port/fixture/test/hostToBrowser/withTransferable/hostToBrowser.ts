@@ -33,26 +33,26 @@ scenario(
         },
         (_, subMessagePort) => subMessagePort.close()
       )
-      .then('should have logged root message to console', ({ webDriver }) =>
-        waitFor(async () => {
+      .then('should have logged root message to console', async ({ webDriver }) => {
+        await waitFor(async () => {
           expect(await getBrowserLogs(webDriver)).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Hello, World!'))
             })
           );
-        })
-      )
-      .and('should have logged sub message to console', ({ webDriver }) =>
-        waitFor(async () => {
+        });
+      })
+      .and('should have logged sub message to console', async ({ webDriver }) => {
+        await waitFor(async () => {
           expect(await getBrowserLogs(webDriver)).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Aloha!'))
             })
           );
-        })
-      );
+        });
+      });
   },
   NodeTest
 );

@@ -36,16 +36,16 @@ scenario(
         },
         (_, { subMessagePort }) => subMessagePort.close()
       )
-      .then('should have logged the message to console', ({ webDriver }) =>
-        waitFor(async () => {
+      .then('should have logged the message to console', async ({ webDriver }) => {
+        await waitFor(async () => {
           expect(await getBrowserLogs(webDriver)).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Hello, World!'))
             })
           );
-        })
-      )
+        });
+      })
       .and('should receive the message from sub-MessagePort', async ({ poll }, { subMessageEvents }) => {
         await waitFor(async () => {
           await poll();

@@ -22,16 +22,16 @@ scenario(
         ({ messagePort }) => messagePort.close()
       )
       .when('a message is posted', async ({ messagePort }) => messagePort.postMessage('Hello, World!'))
-      .then('should have logged the message to console', ({ webDriver }) =>
-        waitFor(async () => {
+      .then('should have logged the message to console', async ({ webDriver }) => {
+        await waitFor(async () => {
           expect(await getBrowserLogs(webDriver)).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Hello, World!'))
             })
           );
-        })
-      );
+        });
+      });
   },
   NodeTest
 );
