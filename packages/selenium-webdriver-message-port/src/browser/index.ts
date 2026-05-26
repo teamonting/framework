@@ -1,5 +1,6 @@
 /// <reference types="../env.d.ts" />
 
+import { v7 } from 'uuid';
 import { ROOT_MESSAGE_PORT } from '../constant.ts';
 import type { MessagePortFacility, SerializedMessage } from '../types.js';
 
@@ -28,7 +29,7 @@ function getMessagePort(id: string): MessagePort {
       const id = port2ToIdMap.get(port);
 
       if (typeof id === 'undefined') {
-        const id = crypto.randomUUID();
+        const id = v7();
 
         const bridgingPort = getMessagePort(id);
 

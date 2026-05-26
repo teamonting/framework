@@ -4,5 +4,6 @@ export default defineConfig({
   entry: {
     browser: './src/browser/index.ts'
   },
-  format: 'esm'
+  format: 'esm',
+  noExternal: ['uuid']
 });

@@ -1,6 +1,7 @@
 /// <reference types="../env.d.ts" />
 
 import type { WebDriver } from 'selenium-webdriver';
+import { v7 } from 'uuid';
 import { ROOT_MESSAGE_PORT } from '../constant.ts';
 
 function setup(webDriver: WebDriver): {
@@ -32,7 +33,7 @@ function setup(webDriver: WebDriver): {
         id,
         data,
         ports.map(port => {
-          const id = crypto.randomUUID();
+          const id = v7();
 
           const bridgingPort = getMessagePort(id);
 
