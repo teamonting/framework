@@ -1,12 +1,12 @@
 type SerializedMessage = {
-  id: string;
-  data: any;
-  portIds: readonly string[];
+  readonly data: any;
+  readonly portId: string;
+  readonly transferPortIds: readonly string[];
 };
 
 interface MessagePortFacility {
   flushAll(): readonly SerializedMessage[];
-  sendToBrowser(id: string, data: any, portIds: readonly string[]): void;
+  sendToBrowser(message: SerializedMessage): void;
 }
 
 export type { MessagePortFacility, SerializedMessage };

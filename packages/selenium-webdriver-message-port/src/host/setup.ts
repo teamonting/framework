@@ -3,6 +3,7 @@
 import type { WebDriver } from 'selenium-webdriver';
 import { v7 } from 'uuid';
 import { ROOT_MESSAGE_PORT } from '../constant.ts';
+import type { SerializedMessage } from '../types.ts';
 
 function setup(webDriver: WebDriver): {
   messagePort: MessagePort;
@@ -22,31 +23,33 @@ function setup(webDriver: WebDriver): {
     return port2;
   };
 
-  const registerMessagePort = (port: MessagePort, id: string): void => {
-    if (portMap.has(id)) {
-      throw new Error(`MessagePort with id "${id}" is already registered, cannot register again`);
+  const registerMessagePort = (port: MessagePort, portId: string): void => {
+    if (portMap.has(portId)) {
+      throw new Error(`MessagePort with id "${portId}" is already registered, cannot register again`);
     }
 
-    portMap.set(id, port);
+    portMap.set(portId, port);
 
     port.addEventListener('message', ({ data, ports }) => {
       webDriver.executeScript(
-        (id: string, data: any, portIds: readonly string[]) => {
+        (message: SerializedMessage) => {
           if (!globalThis.__messagePortFacility) {
             throw new Error('The page does not have harness installed, cannot send message');
           }
 
-          globalThis.__messagePortFacility.sendToBrowser(id, data, portIds);
+          globalThis.__messagePortFacility.sendToBrowser(message);
         },
-        id,
-        data,
-        ports.map(port => {
-          const id = v7();
+        {
+          data,
+          portId,
+          transferPortIds: ports.map(port => {
+            const id = v7();
 
-          registerMessagePort(port, id);
+            registerMessagePort(port, id);
 
-          return id;
-        })
+            return id;
+          })
+        } satisfies SerializedMessage
       );
     });
 
@@ -54,26 +57,26 @@ function setup(webDriver: WebDriver): {
   };
 
   const poll = async () => {
-    const entries = await (webDriver.executeScript(() => {
+    const entries = await webDriver.executeScript<SerializedMessage[]>(() => {
       if (!globalThis.__messagePortFacility) {
         throw new Error('The page does not have harness installed');
       }
 
       return globalThis.__messagePortFacility.flushAll();
-    }) as Promise<readonly { readonly id: string; readonly data: any; readonly portIds: readonly string[] }[]>);
+    });
 
-    for (const { data, id, portIds } of entries) {
-      const port = portMap.get(id);
+    for (const { data, portId, transferPortIds } of entries) {
+      const port = portMap.get(portId);
 
       if (!port) {
-        console.warn(`Browser should not send to unbound port "${id}"`);
+        console.warn(`Browser should not send to unbound port "${portId}"`);
 
         continue;
       }
 
       port.postMessage(
         data,
-        portIds.map(portId => portMap.get(portId) ?? createMessagePort(portId))
+        transferPortIds.map(transferPortId => portMap.get(transferPortId) ?? createMessagePort(transferPortId))
       );
     }
   };
