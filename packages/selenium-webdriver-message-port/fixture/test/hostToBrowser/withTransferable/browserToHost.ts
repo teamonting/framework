@@ -5,7 +5,7 @@ import * as NodeTest from 'node:test';
 import { logging } from 'selenium-webdriver';
 import setup from '../../../../src/host/setup.ts';
 import buildAndNavigate from '../../../shared/buildAndNavigate.ts';
-import getBrowserLogs from '../../../shared/getBrowserLogs.ts';
+import flushBrowserLogs from '../../../shared/flushBrowserLogs.ts';
 
 scenario(
   'hostToBrowser/withTransferable/browserToHost',
@@ -38,7 +38,7 @@ scenario(
       )
       .then('should have logged the message to console', async ({ webDriver }) => {
         await waitFor(async () => {
-          expect(await getBrowserLogs(webDriver)).toContainEqual(
+          expect(await flushBrowserLogs(webDriver)).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Hello, World!'))

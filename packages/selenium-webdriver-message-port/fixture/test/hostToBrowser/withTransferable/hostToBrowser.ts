@@ -5,7 +5,7 @@ import * as NodeTest from 'node:test';
 import { logging } from 'selenium-webdriver';
 import setup from '../../../../src/host/setup.ts';
 import buildAndNavigate from '../../../shared/buildAndNavigate.ts';
-import getBrowserLogs from '../../../shared/getBrowserLogs.ts';
+import flushBrowserLogs from '../../../shared/flushBrowserLogs.ts';
 
 scenario(
   'hostToBrowser/withTransferable/hostToBrowser',
@@ -33,19 +33,20 @@ scenario(
         },
         (_, subMessagePort) => subMessagePort.close()
       )
-      .then('should have logged root message to console', async ({ webDriver }) => {
+      .then('should have logged root and sub message to console', async ({ webDriver }) => {
+        let logs: readonly logging.Entry[] = [];
+
         await waitFor(async () => {
-          expect(await getBrowserLogs(webDriver)).toContainEqual(
+          logs = [...logs, ...(await flushBrowserLogs(webDriver))];
+
+          expect(logs).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Hello, World!'))
             })
           );
-        });
-      })
-      .and('should have logged sub message to console', async ({ webDriver }) => {
-        await waitFor(async () => {
-          expect(await getBrowserLogs(webDriver)).toContainEqual(
+
+          expect(logs).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Aloha!'))
