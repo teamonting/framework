@@ -13,30 +13,25 @@ scenario(
     bdd
       .given(
         'browser loading simple.html',
-        () => buildAndNavigate('hostToBrowser/simple.html'),
-        webDriver => webDriver.quit()
+        async () => ({ webDriver: await buildAndNavigate('hostToBrowser/simple.html') }),
+        ({ webDriver }) => webDriver.quit()
       )
-      .when(
-        'a message is sent',
-        async webDriver => {
-          const { messagePort } = setup(webDriver);
-
-          messagePort.postMessage('Hello, World!');
-
-          return messagePort;
-        },
-        (_, messagePort) => messagePort.close()
+      .and(
+        'its associated MessagePort',
+        precondition => ({ ...precondition, ...setup(precondition.webDriver) }),
+        ({ messagePort }) => messagePort.close()
       )
-      .then('should log the message', async webDriver => {
-        await waitFor(async () => {
+      .when('a message is posted', async ({ messagePort }) => messagePort.postMessage('Hello, World!'))
+      .then('should have logged the message to console', ({ webDriver }) =>
+        waitFor(async () => {
           expect(await getBrowserLogs(webDriver)).toContainEqual(
             expect.objectContaining({
               level: logging.Level.INFO,
               message: expect.stringContaining(JSON.stringify('Hello, World!'))
             })
           );
-        });
-      });
+        })
+      );
   },
   NodeTest
 );

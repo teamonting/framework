@@ -2,6 +2,8 @@ services:
   chrome:
     image: selenium/standalone-chrome:latest
 
+    environment:
+      SE_NODE_SESSION_TIMEOUT: 15
     ports:
       - 4444:4444
       - 7900:7900

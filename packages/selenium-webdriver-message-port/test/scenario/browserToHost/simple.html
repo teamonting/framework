@@ -4,8 +4,7 @@
   <body>
     <script src="/dist/browser.js" type="module"></script>
     <script type="module">
-      navigator.webdriverMessagePort.addEventListener('message', ({ data }) => console.log(data), { once: true });
-      navigator.webdriverMessagePort.start();
+      navigator.webdriverMessagePort.postMessage('Hello, World!');
     </script>
   </body>
 </html>
