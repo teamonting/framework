@@ -4,39 +4,42 @@ import { v7 } from 'uuid';
 import { ROOT_MESSAGE_PORT } from '../constant.ts';
 import type { MessagePortFacility, SerializedMessage } from '../types.js';
 
-const channelMap = new Map<string, MessageChannel>();
-const port2ToIdMap = new Map<MessagePort, string>();
+const portMap = new Map<string, MessagePort>();
+const idMap = new Map<MessagePort, string>();
 const queue: SerializedMessage[] = [];
 
 function flushAll(): readonly SerializedMessage[] {
   return Object.freeze(queue.splice(0));
 }
 
-function getMessagePort(id: string): MessagePort {
-  const existingPort = channelMap.get(id)?.port2;
-
-  if (existingPort) {
-    return existingPort;
+function createMessagePort(id: string): MessagePort {
+  if (portMap.has(id)) {
+    throw new Error(`MessagePort with id "${id}" is already registered, cannot register again`);
   }
 
-  const channel = new MessageChannel();
+  const { port1, port2 } = new MessageChannel();
 
-  channelMap.set(id, channel);
-  port2ToIdMap.set(channel.port2, id);
+  registerMessagePort(port1, id);
 
-  channel.port1.addEventListener('message', ({ data, ports }) => {
+  return port2;
+}
+
+function registerMessagePort(port: MessagePort, id: string): void {
+  if (portMap.has(id)) {
+    throw new Error(`MessagePort with id "${id}" is already registered, cannot register again`);
+  }
+
+  portMap.set(id, port);
+  idMap.set(port, id);
+
+  port.addEventListener('message', ({ data, ports }) => {
     const portIds = ports.map(port => {
-      const id = port2ToIdMap.get(port);
+      const id = idMap.get(port);
 
       if (typeof id === 'undefined') {
         const id = v7();
 
-        const bridgingPort = getMessagePort(id);
-
-        port.addEventListener('message', ({ data, ports }) => bridgingPort.postMessage(data, [...ports]));
-        bridgingPort.addEventListener('message', ({ data, ports }) => port.postMessage(data, [...ports]));
-
-        bridgingPort.start();
+        registerMessagePort(port, id);
 
         return id;
       }
@@ -47,26 +50,24 @@ function getMessagePort(id: string): MessagePort {
     queue.push(Object.freeze({ id, data, portIds }));
   });
 
-  channel.port1.start();
-
-  return channel.port2;
+  port.start();
 }
 
 function sendToBrowser(id: string, data: any, portIds: readonly string[]): void {
-  const channel = channelMap.get(id);
+  const port = portMap.get(id);
 
-  if (!channel) {
+  if (!port) {
     return console.warn(`Host should not send to unbound port ${id}`);
   }
 
-  const ports = portIds.map(portId => getMessagePort(portId));
-
-  channel.port1.postMessage(data, ports);
+  port.postMessage(
+    data,
+    portIds.map(portId => portMap.get(portId) ?? createMessagePort(portId))
+  );
 }
 
 globalThis.__messagePortFacility = Object.freeze({
   flushAll,
-  getMessagePort,
   sendToBrowser
 } satisfies MessagePortFacility);
 
@@ -74,5 +75,5 @@ Object.defineProperty(window.navigator, 'webdriverMessagePort', {
   configurable: false,
   enumerable: true,
   writable: false,
-  value: getMessagePort(ROOT_MESSAGE_PORT)
+  value: createMessagePort(ROOT_MESSAGE_PORT)
 });

@@ -6,22 +6,30 @@ import { ROOT_MESSAGE_PORT } from '../constant.ts';
 
 function setup(webDriver: WebDriver): {
   messagePort: MessagePort;
-  poll(): void;
+  poll(): Promise<void>;
 } {
-  const portMap = new Map<string, MessageChannel>();
+  const portMap = new Map<string, MessagePort>();
 
-  const getMessagePort = (id: string): MessagePort => {
-    const existingChannel = portMap.get(id);
-
-    if (existingChannel) {
-      return existingChannel.port2;
+  const createMessagePort = (id: string): MessagePort => {
+    if (portMap.has(id)) {
+      throw new Error(`MessagePort with id "${id}" is already registered, cannot register again`);
     }
 
-    const channel = new MessageChannel();
+    const { port1, port2 } = new MessageChannel();
 
-    portMap.set(id, channel);
+    registerMessagePort(port1, id);
 
-    channel.port1.addEventListener('message', ({ data, ports }) => {
+    return port2;
+  };
+
+  const registerMessagePort = (port: MessagePort, id: string): void => {
+    if (portMap.has(id)) {
+      throw new Error(`MessagePort with id "${id}" is already registered, cannot register again`);
+    }
+
+    portMap.set(id, port);
+
+    port.addEventListener('message', ({ data, ports }) => {
       webDriver.executeScript(
         (id: string, data: any, portIds: readonly string[]) => {
           if (!globalThis.__messagePortFacility) {
@@ -35,19 +43,14 @@ function setup(webDriver: WebDriver): {
         ports.map(port => {
           const id = v7();
 
-          const bridgingPort = getMessagePort(id);
-
-          port.addEventListener('message', ({ data, ports }) => bridgingPort.postMessage(data, [...ports]));
-          bridgingPort.addEventListener('message', ({ data, ports }) => port.postMessage(data, [...ports]));
+          registerMessagePort(port, id);
 
           return id;
         })
       );
     });
 
-    channel.port1.start();
-
-    return channel.port2;
+    port.start();
   };
 
   const poll = async () => {
@@ -60,23 +63,23 @@ function setup(webDriver: WebDriver): {
     }) as Promise<readonly { readonly id: string; readonly data: any; readonly portIds: readonly string[] }[]>);
 
     for (const { data, id, portIds } of entries) {
-      const messagePort = portMap.get(id);
+      const port = portMap.get(id);
 
-      if (!messagePort) {
-        console.warn(`Browser should not send to unbound port ${id}`);
+      if (!port) {
+        console.warn(`Browser should not send to unbound port "${id}"`);
 
         continue;
       }
 
-      messagePort.port1.postMessage(
+      port.postMessage(
         data,
-        portIds.map(portId => getMessagePort(portId))
+        portIds.map(portId => portMap.get(portId) ?? createMessagePort(portId))
       );
     }
   };
 
   return Object.freeze({
-    messagePort: getMessagePort(ROOT_MESSAGE_PORT),
+    messagePort: createMessagePort(ROOT_MESSAGE_PORT),
     poll
   });
 }

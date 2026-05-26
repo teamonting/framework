@@ -19,11 +19,12 @@
     "build:tsup": "tsup --config tsup.config.ts",
     "docker": "cd ./test/ && docker compose up",
     "start": "npx --offline serve dist",
-    "test": "node --test ./test/scenario/**/*.ts"
+    "test": "node --test"
   },
   "devDependencies": {
     "@testduet/given-when-then": "^0.1.0",
     "@testduet/wait-for": "^0.1.1",
+    "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^25.9.1",
     "@types/selenium-webdriver": "^4.35.5",
     "expect": "^30.4.1",
