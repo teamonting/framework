@@ -3,6 +3,7 @@
 import type { WebDriver } from 'selenium-webdriver';
 import { v7 } from 'uuid';
 import { ROOT_MESSAGE_PORT } from '../constant.ts';
+import { marshal, unmarshal } from '../marshal.ts';
 import type { SerializedMessage } from '../types.ts';
 
 function setup(webDriver: WebDriver): {
@@ -40,7 +41,7 @@ function setup(webDriver: WebDriver): {
           globalThis.__messagePortFacility.sendToBrowser(message);
         },
         {
-          data,
+          data: marshal(data, ports),
           portId,
           transferPortIds: ports.map(port => {
             // Because MessagePort will detach on send, thus, postMessage() cannot transfer the same MessagePort twice.
@@ -79,11 +80,10 @@ function setup(webDriver: WebDriver): {
         continue;
       }
 
-      port.postMessage(
-        data,
-        // postMessage() cannot send MessagePort twice, thus, every port received must be new.
-        transferPortIds.map(transferPortId => createMessagePort(transferPortId))
-      );
+      // postMessage() cannot send MessagePort twice, thus, every port received must be new.
+      const transfer = transferPortIds.map(transferPortId => createMessagePort(transferPortId));
+
+      port.postMessage(unmarshal(data, transfer), transfer);
     }
   };
 

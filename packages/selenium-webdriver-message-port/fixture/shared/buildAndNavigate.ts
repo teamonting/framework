@@ -16,7 +16,7 @@ export default async function buildAndNavigate(relativeURL: string) {
     .usingServer('http://localhost:4444/wd/hub/')
     .build();
 
-  await webDriver.navigate().to(new URL(relativeURL, 'http://web:3000/scenario/').href);
+  await webDriver.navigate().to(new URL(relativeURL, 'http://web:3000/test/').href);
 
   return webDriver;
 }

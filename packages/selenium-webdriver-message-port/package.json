@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "tsup --config tsup.config.ts",
-    "docker": "cd ./test/ && docker compose up",
+    "docker": "cd ./fixture/ && docker compose up",
     "start": "npx --offline serve dist",
     "test": "node --test"
   },
@@ -26,6 +26,7 @@
     "@types/node": "^25.9.1",
     "@types/selenium-webdriver": "^4.35.5",
     "expect": "^30.4.1",
+    "message-port-rpc": "^2.0.0",
     "selenium-webdriver": "^4.44.0",
     "serve": "^14.2.6",
     "tsup": "^8.5.1",

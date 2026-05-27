@@ -2,6 +2,7 @@
 
 import { v7 } from 'uuid';
 import { ROOT_MESSAGE_PORT } from '../constant.ts';
+import { marshal, unmarshal } from '../marshal.ts';
 import type { MessagePortFacility, SerializedMessage } from '../types.js';
 
 const portMap = new Map<string, MessagePort>();
@@ -44,7 +45,13 @@ function registerMessagePort(port: MessagePort, portId: string): void {
       return id;
     });
 
-    queue.push(Object.freeze({ data, portId, transferPortIds }));
+    queue.push(
+      Object.freeze({
+        data: marshal(data, ports),
+        portId,
+        transferPortIds
+      })
+    );
   });
 
   port.start();
@@ -61,11 +68,10 @@ function sendToBrowser(message: SerializedMessage): void {
     return;
   }
 
-  port.postMessage(
-    data,
-    // postMessage() cannot send MessagePort twice, thus, every port received must be new.
-    transferPortIds.map(transferPortId => createMessagePort(transferPortId))
-  );
+  // postMessage() cannot send MessagePort twice, thus, every port received must be new.
+  const transfer = transferPortIds.map(transferPortId => createMessagePort(transferPortId));
+
+  port.postMessage(unmarshal(data, transfer), transfer);
 }
 
 globalThis.__messagePortFacility = Object.freeze({
