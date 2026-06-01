@@ -5,5 +5,5 @@ export default defineConfig({
     browser: './src/browser/index.ts'
   },
   format: 'esm',
-  noExternal: ['uuid']
+  noExternal: ['uuid', 'workthru']
 });

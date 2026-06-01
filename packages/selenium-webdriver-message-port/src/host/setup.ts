@@ -5,12 +5,19 @@ import { v7 } from 'uuid';
 import { ROOT_MESSAGE_PORT } from '../constant.ts';
 import { marshal, unmarshal } from '../marshal.ts';
 import type { SerializedMessage } from '../types.ts';
+import createSequencer from './createSequencer.ts';
 
 function setup(webDriver: WebDriver): {
   messagePort: MessagePort;
   poll(): Promise<void>;
 } {
   const portMap = new Map<string, MessagePort>();
+
+  // `executeScript()` calls (and all calls) are not queued in `selenium-webdriver`, they are HTTP POST in parallel.
+  // Thus, multiple `executeScript()` calls could be processed in random order.
+  // Thus, `MessagePort` could be used before they are transferred.
+  // We need to sequence all `executeScript()` calls.
+  const executeScriptSequencer = createSequencer();
 
   const createMessagePort = (id: string): MessagePort => {
     if (portMap.has(id)) {
@@ -32,31 +39,33 @@ function setup(webDriver: WebDriver): {
     portMap.set(portId, port);
 
     port.addEventListener('message', ({ data, ports }) => {
-      webDriver.executeScript<void>(
-        (message: SerializedMessage) => {
-          if (!globalThis.__messagePortFacility) {
-            throw new Error('The page does not have harness installed, cannot send message');
-          }
+      executeScriptSequencer(async () => {
+        await webDriver.executeScript<void>(
+          (message: SerializedMessage) => {
+            if (!globalThis.__messagePortFacility) {
+              throw new Error('The page does not have harness installed, cannot send message');
+            }
 
-          globalThis.__messagePortFacility.sendToBrowser(message);
-        },
-        {
-          data: marshal(data, ports),
-          portId,
-          transferPortIds: ports.map(port => {
-            // Because MessagePort will detach on send, thus, postMessage() cannot transfer the same MessagePort twice.
-            // We don't need to check if the port already have an ID or not.
-            // MessagePort cannot be sent twice, thus it must be new.
-            // Otherwise postMessage() would have already fail and should never reach this code block.
+            globalThis.__messagePortFacility.sendToBrowser(message);
+          },
+          {
+            data: marshal(data, ports),
+            portId,
+            transferPortIds: ports.map(port => {
+              // Because MessagePort will be neutered on transfer, thus, postMessage() cannot transfer the same MessagePort twice.
+              // We don't need to check if the port already have an ID or not, it must be new.
+              // Otherwise postMessage() would have already fail and should never reach this code block.
 
-            const id = v7();
+              // UUID v7 does not require WebCrypto.
+              const id = v7();
 
-            registerMessagePort(port, id);
+              registerMessagePort(port, id);
 
-            return id;
-          })
-        } satisfies SerializedMessage
-      );
+              return id;
+            })
+          } satisfies SerializedMessage
+        );
+      });
     });
 
     port.start();
@@ -80,7 +89,7 @@ function setup(webDriver: WebDriver): {
         continue;
       }
 
-      // postMessage() cannot send MessagePort twice, thus, every port received must be new.
+      // postMessage() will neuter MessagePort after sent, thus, every port received must be new transfer.
       const transfer = transferPortIds.map(transferPortId => createMessagePort(transferPortId));
 
       port.postMessage(unmarshal(data, transfer), transfer);

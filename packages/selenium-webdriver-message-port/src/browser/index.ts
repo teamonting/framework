@@ -12,14 +12,14 @@ function flushAll(): readonly SerializedMessage[] {
   return Object.freeze(queue.splice(0));
 }
 
-function createMessagePort(id: string): MessagePort {
-  if (portMap.has(id)) {
-    throw new Error(`MessagePort with id "${id}" is already registered, cannot register again`);
+function createMessagePort(portId: string): MessagePort {
+  if (portMap.has(portId)) {
+    throw new Error(`MessagePort with id "${portId}" is already registered, cannot register again`);
   }
 
   const { port1, port2 } = new MessageChannel();
 
-  registerMessagePort(port1, id);
+  registerMessagePort(port1, portId);
 
   return port2;
 }
@@ -38,6 +38,7 @@ function registerMessagePort(port: MessagePort, portId: string): void {
     // Otherwise postMessage() would have already fail and should never reach this code block.
 
     const transferPortIds = ports.map(port => {
+      // UUID v7 does not require WebCrypto.
       const id = v7();
 
       registerMessagePort(port, id);
@@ -68,7 +69,7 @@ function sendToBrowser(message: SerializedMessage): void {
     return;
   }
 
-  // postMessage() cannot send MessagePort twice, thus, every port received must be new.
+  // postMessage() will neuter MessagePort after sent, thus, every port received must be new transfer.
   const transfer = transferPortIds.map(transferPortId => createMessagePort(transferPortId));
 
   port.postMessage(unmarshal(data, transfer), transfer);

@@ -1,4 +1,4 @@
-import walk from './walk.ts';
+import { workthru } from 'workthru';
 
 const MESSAGE_PORT = '@@__SELENIUM_WEBDRIVER_MESSAGE_PORT__@@';
 
@@ -16,7 +16,7 @@ const MESSAGE_PORT = '@@__SELENIUM_WEBDRIVER_MESSAGE_PORT__@@';
  * @returns
  */
 function marshal(target: any, transferable: readonly Transferable[]): any {
-  return walk(target, value => {
+  return workthru(target, value => {
     if (value instanceof MessagePort) {
       const index = transferable.indexOf(value);
 
@@ -41,7 +41,7 @@ function marshal(target: any, transferable: readonly Transferable[]): any {
  * @returns
  */
 function unmarshal(target: any, transferable: readonly Transferable[]): any {
-  return walk(target, value => {
+  return workthru(target, value => {
     if (Array.isArray(value) && value[0] === MESSAGE_PORT) {
       return transferable[value[1]];
     }
