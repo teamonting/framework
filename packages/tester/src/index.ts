@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-import { viaBiDi } from '@onting/selenium-webdriver-message-port/host';
+import { viaBiDi } from '@onting/selenium-webdriver-message-port/host.js';
 import { messagePortRPC as rpc } from 'message-port-rpc';
 import path from 'node:path';
 import { cwd } from 'node:process';

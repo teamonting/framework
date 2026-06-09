@@ -3,7 +3,7 @@
   <head> </head>
   <body>
     <script type="module">
-      import { messagePort } from 'https://cdn.jsdelivr.net/npm/@onting/selenium-webdriver-message-port/dist/browser.js';
+      import { messagePort } from 'https://esm.sh/@onting/selenium-webdriver-message-port/browser.js';
       import { messagePortRPC as rpc } from 'https://esm.sh/message-port-rpc';
 
       const result = await rpc(messagePort)();
