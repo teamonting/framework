@@ -1,40 +1,204 @@
-import { setup } from '@onting/selenium-webdriver-message-port/host.js';
+/// <reference types="node" />
+
+import { viaBiDi } from '@onting/selenium-webdriver-message-port/host';
+import { messagePortRPC as rpc } from 'message-port-rpc';
 import path from 'node:path';
-import { Browser, Builder } from 'selenium-webdriver';
-import { ServiceBuilder } from 'selenium-webdriver/chrome.js';
+import { cwd } from 'node:process';
+import { Browser, Builder, error as SeleniumWebDriverError } from 'selenium-webdriver';
+import getScriptManagerInstance from 'selenium-webdriver/bidi/scriptManager.js';
+import { Options, ServiceBuilder } from 'selenium-webdriver/chrome.js';
+import createSequencer from './private/createSequencer.ts';
+import delta from './private/delta.ts';
+import findHostIP from './private/findHostIP.ts';
+import findLocalIP from './private/findLocalIP.ts';
 
-const builder = new Builder();
+const hostIP = await findHostIP();
+const localIP = await findLocalIP();
 
-const webDriver = await builder
+const serviceBuilder = new ServiceBuilder(path.join(cwd(), 'chromedriver.exe'))
+  .addArguments('--allowed-ips', localIP)
+  .setHostname(hostIP);
+
+const service = await serviceBuilder.build();
+
+const options = new Options();
+
+options.enableBidi();
+
+const webDriver = await new Builder()
   .forBrowser(Browser.CHROME)
-  .setChromeService(new ServiceBuilder(path.join(process.cwd(), 'chromedriver.exe')))
+  .setChromeOptions(options)
+  .usingServer(await service.start())
   .build();
 
-await webDriver.navigate().to('http://localhost:3000');
+// Patch WebSocket so to handle large amount of ScriptManager.
+const { socket } = await webDriver.getBidi();
 
-const { getMessagePort, poll } = setup(webDriver);
-const messagePort = getMessagePort();
+'setMaxListeners' in socket && typeof socket.setMaxListeners === 'function' && socket.setMaxListeners(100);
 
-messagePort.addEventListener('message', ({ data, ports }: MessageEvent) => {
-  console.log(`HOST RECEIVE (numPort=${ports.length}): ${data}`);
+type RealmInfo = {
+  readonly browsingContext: string;
+  readonly origin: string;
+  readonly realmId: string;
+  readonly realmType: string;
+};
 
-  ports[0]?.postMessage('Good day!');
-});
+type ScriptManager = {
+  close(): Promise<void>;
+  getAllRealms(): Promise<readonly RealmInfo[]>;
+  onRealmCreated(callback: () => void): Promise<string>;
+  onRealmDestroyed(callback: () => void): Promise<string>;
+};
 
-const { port1, port2 } = new MessageChannel();
+type ActiveRealmContextReadWrite = {
+  messagePortPromise: Promise<MessagePort>;
+  realmInfo: RealmInfo;
+  scriptManagerPromise: Promise<ScriptManager>;
 
-port1.addEventListener('message', ({ data }: MessageEvent) => {
-  console.log(`HOST RECEIVE 2: ${data}`);
-});
+  abort(): void;
+};
 
-port1.start();
+type ActiveRealmContext = Readonly<ActiveRealmContextReadWrite>;
 
-messagePort.postMessage('Hello, World!', [port2]);
+function shortenRealmId(value: string): string {
+  if (value.length > 8) {
+    return `${value.slice(0, 4)}...${value.slice(-4)}`;
+  }
 
-for (let index = 0; index < 60; index++) {
-  poll();
+  return value;
+}
 
+async function attachRealm(realmInfo: RealmInfo): Promise<void> {
+  const { realmId } = realmInfo;
+
+  if (activeRealms.has(realmId)) {
+    throw new Error(`Realm "${realmId}" has already attached`);
+  }
+
+  console.log(
+    `[${shortenRealmId(realmId)}] Attach "${realmInfo.realmType}" realm of browsing context "${realmInfo.browsingContext}" at ${realmInfo.origin}`
+  );
+
+  const abortController = new AbortController();
+
+  const scriptManagerPromise = getScriptManagerInstance(
+    realmInfo.browsingContext,
+    webDriver as any
+  ) as unknown as Promise<ScriptManager>;
+
+  const messagePortPromise = scriptManagerPromise
+    .then(scriptManager => {
+      if (abortController.signal.aborted) {
+        throw new Error('Aborted');
+      }
+
+      return viaBiDi(scriptManager, { realmId });
+    })
+    .then(({ messagePort }) => messagePort);
+
+  const entry: ActiveRealmContextReadWrite = {
+    abort: abortController.abort.bind(abortController),
+    messagePortPromise,
+    realmInfo,
+    // TODO: It seems `selenium-webdriver@4.44.0` is bugged.
+    //       If we use a shared `ScriptManager`, we will receive channel messages more than once.
+    //       It seems if `onMessage()` is called twice, `selenium-webdriver` will call every `onMessage()` twice as well (4 times in total).
+    scriptManagerPromise
+  };
+
+  abortController.signal.addEventListener('abort', () => {
+    (async () => {
+      try {
+        (await entry.messagePortPromise).close();
+      } catch {}
+    })();
+
+    (async () => {
+      try {
+        (await entry.scriptManagerPromise).close();
+      } catch {}
+    })();
+  });
+
+  activeRealms.set(realmId, entry);
+
+  rpc(await entry.messagePortPromise, () => `Hello, World! ${new Date().toLocaleString()}`);
+}
+
+async function detachRealm(realmInfo: RealmInfo): Promise<void> {
+  const { realmId } = realmInfo;
+
+  const realmContext = activeRealms.get(realmId);
+
+  if (!realmContext) {
+    throw new Error(`Realm "${realmId}" has already detached`);
+  }
+
+  console.log(
+    `[${shortenRealmId(realmId)}] Detach "${realmInfo.realmType}" realm of browsing context "${realmInfo.browsingContext}" at ${realmInfo.origin}`
+  );
+
+  realmContext.abort();
+
+  activeRealms.delete(realmId);
+}
+
+async function reconcileRealms(): Promise<void> {
+  const realms = (await scriptManager.getAllRealms()) as readonly RealmInfo[];
+
+  const realmMap = new Map<string, RealmInfo>(realms.map(realm => [realm.realmId, realm]));
+
+  const [added, _, deleted] = delta<string>(new Set(realmMap.keys()), new Set(activeRealms.keys()));
+
+  for (const realmId of deleted.values()) {
+    await detachRealm(activeRealms.get(realmId)!.realmInfo);
+  }
+
+  for (const realmId of added.values()) {
+    await attachRealm(realmMap.get(realmId)!);
+  }
+}
+
+const activeRealms: Map<string, ActiveRealmContext> = new Map();
+const scriptManager = (await getScriptManagerInstance(null as any, webDriver as any)) as unknown as ScriptManager;
+
+const sequenceReconcileRealmsCall = createSequencer();
+
+const reconcileRealmsInSequence: typeof reconcileRealms = (...args) => {
+  return sequenceReconcileRealmsCall(async () => {
+    try {
+      return await reconcileRealms(...args);
+    } catch {}
+  });
+};
+
+await reconcileRealmsInSequence();
+
+scriptManager.onRealmCreated(() => void reconcileRealmsInSequence());
+scriptManager.onRealmDestroyed(() => void reconcileRealmsInSequence());
+
+for (;;) {
+  try {
+    // Detects when user closed the browser manually.
+    await webDriver.getAllWindowHandles();
+  } catch (error) {
+    if (error instanceof SeleniumWebDriverError.NoSuchSessionError) {
+      break;
+    }
+
+    throw error;
+  }
+
+  // WebDriver.getAllWindowHandles() is not event-driven, we need to call it once every second or so.
   await new Promise(resolve => setTimeout(resolve, 1_000));
 }
 
-webDriver.close();
+console.log('Shutting down');
+
+try {
+  await scriptManager.close();
+} catch {}
+
+for (const realmContext of activeRealms.values()) {
+  realmContext.abort();
+}
