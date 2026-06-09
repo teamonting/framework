@@ -1,7 +1,0 @@
-{
-  "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "noEmit": true
-  },
-  "extends": "@tsconfig/strictest"
-}
