@@ -2,20 +2,19 @@
 
 import { viaBiDi } from '@onting/selenium-webdriver-message-port/host.js';
 import { messagePortRPC as rpc } from 'message-port-rpc';
-import path from 'node:path';
-import { cwd } from 'node:process';
 import { Browser, Builder, error as SeleniumWebDriverError } from 'selenium-webdriver';
 import getScriptManagerInstance from 'selenium-webdriver/bidi/scriptManager.js';
 import { Options, ServiceBuilder } from 'selenium-webdriver/chrome.js';
 import createSequencer from './private/createSequencer.ts';
 import delta from './private/delta.ts';
+import findChromeDriverBin from './private/findChromeDriverBin.ts';
 import findHostIP from './private/findHostIP.ts';
 import findLocalIP from './private/findLocalIP.ts';
 
 const hostIP = await findHostIP();
 const localIP = await findLocalIP();
 
-const serviceBuilder = new ServiceBuilder(path.join(cwd(), 'chromedriver.exe'))
+const serviceBuilder = new ServiceBuilder(await findChromeDriverBin())
   .addArguments('--allowed-ips', localIP)
   .setHostname(hostIP);
 
