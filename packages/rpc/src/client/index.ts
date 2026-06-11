@@ -6,14 +6,7 @@ function lazyStub<TArgs extends unknown[], TSyncReturn extends unknown>(
 ): (...args: TArgs) => Promise<TSyncReturn> {
   let fnPromise: Promise<(...args: TArgs) => Promise<TSyncReturn>> | undefined;
 
-  return async (...args) => {
-    const fn = await (fnPromise ??
-      (fnPromise = fnFactory().then(result => {
-        return result;
-      })));
-
-    return fn(...args);
-  };
+  return async (...args) => (await (fnPromise ?? (fnPromise = fnFactory())))(...args);
 }
 
 function createStubFactory(): (messagePort: MessagePort) => Stub {
