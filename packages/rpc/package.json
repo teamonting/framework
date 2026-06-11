@@ -8,7 +8,31 @@
   "license": "MIT",
   "author": "William Wong",
   "type": "module",
-  "main": "./src/index.mjs",
-  "scripts": {},
-  "devDependencies": {}
+  "exports": {
+    "./client.js": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    },
+    "./server.js": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "start": "npm run build -- --watch"
+  },
+  "dependencies": {
+    "message-port-rpc": "^2.0.2-main.202606110828.e1f0777"
+  },
+  "devDependencies": {
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/selenium-webdriver": "^4.35.6",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
 }

@@ -1,0 +1,28 @@
+{
+  "rewrites": [
+    {
+      "source": ".",
+      "destination": "./public/index.html"
+    },
+    {
+      "source": "./static/js/browserx.js",
+      "destination": "../../node_modules/@onting/selenium-webdriver-message-port/dist/browser.js"
+    },
+    {
+      "source": "./static/js/browser.js",
+      "destination": "./dist/browser.js"
+    },
+    {
+      "source": "./static/js/message-port-rpc.js",
+      "destination": "./dist/message-port-rpc.js"
+    },
+    {
+      "source": "./static/js/client.js",
+      "destination": "./dist/client.js"
+    },
+    {
+      "source": "./static/js/client.js.map",
+      "destination": "./dist/client.js.map"
+    }
+  ]
+}

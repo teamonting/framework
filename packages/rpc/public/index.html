@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head></head>
+  <body>
+    <script type="module">
+      import { messagePort } from 'https://esm.sh/@onting/selenium-webdriver-message-port@main/browser.js';
+      import { messagePortRPC } from 'https://esm.sh/message-port-rpc@main';
+      import { createStubFactory } from './static/js/client.js';
+
+      const stub = createStubFactory()(messagePort);
+
+      const timestamp = await stub.getTimestamp();
+
+      const headingElement = document.createElement('h1');
+
+      headingElement.textContent = timestamp;
+
+      document.body.appendChild(headingElement);
+    </script>
+  </body>
+</html>
