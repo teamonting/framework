@@ -1,1 +1,1 @@
-export { default as listen } from './private/listen.ts';
+export { default as listen } from './listen.ts';

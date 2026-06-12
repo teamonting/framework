@@ -2,8 +2,6 @@
 
 import { listen } from '@onting/rpc/server.js';
 import { viaBiDi } from '@onting/selenium-webdriver-message-port/host.js';
-
-// import { messagePortRPC as rpc } from 'message-port-rpc';
 import { Browser, Builder, error as SeleniumWebDriverError } from 'selenium-webdriver';
 import getScriptManagerInstance from 'selenium-webdriver/bidi/scriptManager.js';
 import { Options, ServiceBuilder } from 'selenium-webdriver/chrome.js';
