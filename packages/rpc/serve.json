@@ -5,10 +5,6 @@
       "destination": "./public/index.html"
     },
     {
-      "source": "./static/js/browserx.js",
-      "destination": "../../node_modules/@onting/selenium-webdriver-message-port/dist/browser.js"
-    },
-    {
       "source": "./static/js/browser.js",
       "destination": "./dist/browser.js"
     },

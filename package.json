@@ -17,5 +17,8 @@
   "workspaces": [
     "packages/rpc",
     "packages/browser"
-  ]
+  ],
+  "scripts": {
+    "build": "npm run build --if-present --workspaces"
+  }
 }

@@ -4,10 +4,10 @@
   <body>
     <script type="module">
       import { messagePort } from 'https://esm.sh/@onting/selenium-webdriver-message-port@main/browser.js';
-      import { messagePortRPC } from 'https://esm.sh/message-port-rpc@main';
-      import { createStubFactory } from './static/js/client.js';
+      import { messagePortRPC } from 'https://esm.sh/message-port-rpc@3.0.0';
+      import { createStub } from './static/js/client.js';
 
-      const stub = createStubFactory()(messagePort);
+      const stub = createStub(messagePort);
 
       const timestamp = await stub.getTimestamp();
 
