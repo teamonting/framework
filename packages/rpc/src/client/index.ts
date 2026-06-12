@@ -1,1 +1,1 @@
-export { default as createStub } from './private/createStub';
+export { default as createClientStub } from './private/createClientStub';

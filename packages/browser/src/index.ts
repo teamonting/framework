@@ -107,6 +107,10 @@ async function attachRealm(realmInfo: RealmInfo): Promise<void> {
     scriptManagerPromise
   };
 
+  activeRealms.set(realmId, entry);
+
+  const teardown = listen(webDriver, await entry.messagePortPromise);
+
   abortController.signal.addEventListener('abort', () => {
     (async () => {
       try {
@@ -119,12 +123,11 @@ async function attachRealm(realmInfo: RealmInfo): Promise<void> {
         (await entry.scriptManagerPromise).close();
       } catch {}
     })();
+
+    try {
+      teardown();
+    } catch {}
   });
-
-  activeRealms.set(realmId, entry);
-
-  // rpc(await entry.messagePortPromise, () => `Hello, World! ${new Date().toLocaleString()}`);
-  listen(webDriver, await entry.messagePortPromise);
 }
 
 async function detachRealm(realmInfo: RealmInfo): Promise<void> {
