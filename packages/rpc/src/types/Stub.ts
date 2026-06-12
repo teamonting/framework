@@ -1,5 +1,6 @@
 type Stub = {
-  readonly getTimestamp: () => string;
+  captureScreenshot(): Promise<string>;
+  getTimestamp(): string;
 };
 
 export type { Stub };

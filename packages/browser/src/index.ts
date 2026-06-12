@@ -2,7 +2,7 @@
 
 import { listen } from '@onting/rpc/server.js';
 import { viaBiDi } from '@onting/selenium-webdriver-message-port/host.js';
-import { Browser, Builder, error as SeleniumWebDriverError } from 'selenium-webdriver';
+import { Browser, BrowsingContext, Builder, error as SeleniumWebDriverError } from 'selenium-webdriver';
 import getScriptManagerInstance from 'selenium-webdriver/bidi/scriptManager.js';
 import { Options, ServiceBuilder } from 'selenium-webdriver/chrome.js';
 import createSequencer from './private/createSequencer.ts';
@@ -107,7 +107,11 @@ async function attachRealm(realmInfo: RealmInfo): Promise<void> {
 
   activeRealms.set(realmId, entry);
 
-  const teardown = listen(webDriver, await entry.messagePortPromise);
+  const teardown = listen(
+    webDriver,
+    await BrowsingContext(webDriver, { browsingContextId: realmInfo.browsingContext }),
+    await entry.messagePortPromise
+  );
 
   abortController.signal.addEventListener('abort', () => {
     (async () => {
