@@ -196,6 +196,15 @@ for (;;) {
   await new Promise(resolve => setTimeout(resolve, 1_000));
 }
 
+// We cannot use SIGINT to shutdown browsers automatically.
+// When WSL2 is running chromedriver.exe (on Windows):
+//
+// 1. SIGINT will terminate chromedriver.exe (on Windows) immediately, seems WSL2 behavior
+// 2. Browser still open
+// 3. We lost chromedriver.exe and has no way to delete the session (close the browser)
+//
+// However, for WSL2 running Linux chromedriver, it works.
+
 console.log('Shutting down');
 
 try {
