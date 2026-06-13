@@ -26,7 +26,7 @@
     "start": "node --experimental-strip-types ."
   },
   "dependencies": {
-    "@onting/selenium-webdriver-message-port": "^0.1.1-main.202606090808.bc0a229",
+    "@onting/selenium-webdriver-message-port": "^0.2.0",
     "commander": "^4.1.1",
     "find-up": "^8.0.0",
     "message-port-rpc": "^3.0.1",
