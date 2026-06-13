@@ -29,7 +29,7 @@
     "@onting/selenium-webdriver-message-port": "^0.1.1-main.202606090808.bc0a229",
     "commander": "^4.1.1",
     "find-up": "^8.0.0",
-    "message-port-rpc": "^2.0.2-main.202606110828.e1f0777",
+    "message-port-rpc": "^3.0.1-main.202606130421.350605f",
     "selenium-webdriver": "^4.44.0"
   },
   "devDependencies": {

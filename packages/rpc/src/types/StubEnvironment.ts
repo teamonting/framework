@@ -1,5 +1,5 @@
 import type { WebDriver } from 'selenium-webdriver';
-import type { BrowsingContext } from './BrowsingContext';
+import type { BrowsingContext } from './BrowsingContext.ts';
 
 type StubEnvironment = {
   readonly browsingContext: BrowsingContext;

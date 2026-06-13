@@ -1,1 +1,1 @@
-export { default as createClientStub } from './createClientStub';
+export { default as createClientStub } from './createClientStub.ts';

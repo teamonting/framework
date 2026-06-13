@@ -1,27 +1,26 @@
 import { messagePortRPC as rpc } from 'message-port-rpc';
 import type { InferHandshake } from '../../types/InferHandshake.ts';
-import type { StubDeclaration, StubEnvironment, StubImplementation } from '../../types/StubDeclaration.ts';
+import type { StubDeclaration } from '../../types/StubDeclaration.ts';
+import type { StubImplementation } from '../../types/StubImplementation.ts';
 
-function createHandshakeStub<T extends StubDeclaration<StubImplementation>>(
-  stubDeclaration: T,
-  stubEnvironment: StubEnvironment
+function createHandshakeStub<T extends StubDeclaration<S>, S extends StubImplementation>(
+  declaration: T,
+  implementation: S
 ): {
-  readonly fn: () => InferHandshake<T>;
+  readonly fn: () => InferHandshake<S>;
   readonly teardown: () => void;
 } {
-  const stub = stubDeclaration.implement(stubEnvironment);
   const openedPorts = new Set<MessagePort>();
 
   return {
     fn() {
-      const handshakeResultMap = new Map<string, MessagePort>();
+      const handshakeResultMap = new Map<keyof S, MessagePort>();
 
       // Prefer StubDeclaration.keys over Object.getOwnPropertyNames(stubDeclaration).
-      for (const key of stubDeclaration.keys) {
-        const value = stub[key];
+      for (const key of declaration.keys) {
+        const value = implementation[key];
 
-        // Handle discrepancies between key and implementation.
-        // TODO: Add console.warn() about discrepancies.
+        // We already verified the implementation in `listen()`.
         if (value) {
           const { port1, port2 } = new MessageChannel();
 
@@ -35,7 +34,7 @@ function createHandshakeStub<T extends StubDeclaration<StubImplementation>>(
       return Object.fromEntries(handshakeResultMap.entries()) satisfies Record<
         string,
         MessagePort
-      > as InferHandshake<T>;
+      > as InferHandshake<S>;
     },
     teardown() {
       for (const port of openedPorts) {
