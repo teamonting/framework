@@ -1,0 +1,25 @@
+{
+  "name": "@onting/stub",
+  "version": "0.0.0-0",
+  "description": "",
+  "license": "MIT",
+  "author": "William Wong",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=24.12.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "start": "npm run build -- --watch"
+  },
+  "devDependencies": {
+    "@onting/rpc": "0.0.0-0",
+    "@types/selenium-webdriver": "^4.35.6"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "rewrites": [
+    {
+      "source": ".",
+      "destination": "./public/index.html"
+    },
+    {
+      "source": "./static/js/browser.js",
+      "destination": "./packages/browser/dist/browser.js"
+    },
+    {
+      "source": "./static/js/browser.js.map",
+      "destination": "./packages/browser/dist/browser.js.map"
+    },
+    {
+      "source": "./static/js/client.js",
+      "destination": "./packages/rpc/dist/client.js"
+    },
+    {
+      "source": "./static/js/client.js.map",
+      "destination": "./packages/rpc/dist/client.js.map"
+    },
+    {
+      "source": "./static/js/stub.js",
+      "destination": "./packages/stub/dist/index.js"
+    },
+    {
+      "source": "./static/js/stub.js.map",
+      "destination": "./packages/stub/dist/index.js.map"
+    }
+  ]
+}

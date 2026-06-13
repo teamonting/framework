@@ -1,10 +1,15 @@
 import { messagePortRPC as rpc } from 'message-port-rpc';
-import type { WebDriver } from 'selenium-webdriver';
-import type { BrowsingContext } from '../types/BrowsingContext.ts';
+import type { StubDeclaration } from '../types/StubDeclaration.ts';
+import type { StubEnvironment } from '../types/StubEnvironment.ts';
+import type { StubImplementation } from '../types/StubImplementation.ts';
 import createHandshakeStub from './private/createHandshakeStub.ts';
 
-function listen(webDriver: WebDriver, browsingContext: BrowsingContext, messagePort: MessagePort): () => void {
-  const { fn, teardown } = createHandshakeStub(webDriver, browsingContext);
+function listen<T extends StubDeclaration<StubImplementation>>(
+  stubDeclaration: T,
+  stubEnvironment: StubEnvironment,
+  messagePort: MessagePort
+): () => void {
+  const { fn, teardown } = createHandshakeStub(stubDeclaration, stubEnvironment);
 
   rpc(messagePort, fn);
 

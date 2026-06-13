@@ -2,10 +2,7 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "ignoreDeprecations": "6.0",
-    "noEmit": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "target": "esnext"
+    "noEmit": true
   },
   "extends": "@tsconfig/strictest"
 }

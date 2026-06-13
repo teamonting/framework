@@ -1,3 +1,6 @@
 /.env*
 /chromedriver*
-/node_modules/**
+/dist/
+/geckodriver*
+/msedgedriver*
+/node_modules/
