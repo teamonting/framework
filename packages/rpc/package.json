@@ -27,7 +27,7 @@
     "start": "npm run build -- --watch"
   },
   "dependencies": {
-    "message-port-rpc": "^3.0.1-main.202606130421.350605f"
+    "message-port-rpc": "^3.0.1"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
