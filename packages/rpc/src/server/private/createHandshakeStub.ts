@@ -1,5 +1,5 @@
 import { messagePortRPC as rpc } from 'message-port-rpc';
-import type { InferHandshake } from '../../types/InferHandshake.ts';
+import type { InferHandshake } from '../../types/internal/InferHandshake.ts';
 import type { StubDeclaration } from '../../types/StubDeclaration.ts';
 import type { StubImplementation } from '../../types/StubImplementation.ts';
 

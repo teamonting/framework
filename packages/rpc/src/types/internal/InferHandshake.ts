@@ -1,4 +1,4 @@
-import type { StubImplementation } from './StubImplementation.ts';
+import type { StubImplementation } from '../StubImplementation.ts';
 
 type InferHandshake<S extends StubImplementation> = Record<keyof S, MessagePort>;
 
